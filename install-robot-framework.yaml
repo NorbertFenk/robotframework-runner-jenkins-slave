@@ -1,0 +1,125 @@
+---
+
+## Command to run the agent with root user
+#
+# apt-get update
+# apt-get install ansible
+
+# xvfb-run \
+#--server-args="-screen 0 1920x1080x24 -ac" \
+#robot \
+#-v BROWSER:firefox \
+#--outputDir /development/code/reports \
+#/development/code/test
+
+- name: a play that runs entirely on the ansible host
+  hosts: localhost
+  become: yes
+
+  tasks:
+## Install packages
+  - name: Install python3-pip
+    apt:
+     name: python3-pip
+     state: latest
+
+  - name: Install x virtual frame buffer for the ui test runs and for the images
+    apt:
+     name: xvfb
+     state: latest
+
+## Install Firefox from tar file
+  - name: Install Firefox from package to solve the "root use could not run Firefox problem"
+    get_url:
+      url: https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US
+      dest: /tmp/latest-firefox.tar.bz2
+
+  - name: Install the Firefox
+    unarchive: src="/tmp/latest-firefox.tar.bz2" dest=/opt mode=0700 copy=no
+
+  - name: Create a symbolic link
+    file:
+      src: /opt/firefox/firefox-bin
+      dest: /usr/bin/firefox
+      owner: root
+      group: root
+      state: link
+
+## Install Chromium from
+  - name: Install Chromium
+    apt:
+     name: chromium
+
+  - name: Install Chromium web deriver
+    apt:
+      name: chromium-driver
+
+  - name: Create folder
+    file:
+      path: /opt/robotframework/bin/
+      state: directory
+      mode: '0755'
+
+  - name: Creat chromedriver magic
+    copy:
+      dest: "/opt/robotframework/bin/chromedriver"
+      mode: '0755'
+      content: |
+        #!/bin/sh
+        /usr/bin/chromedriver --verbose --log-path=/var/log/chromedriver --no-sandbox $@
+
+  - name: Creat chromium magic
+    copy:
+      dest: "/opt/robotframework/bin/chromium"
+      mode: '0755'
+      content: |
+        #!/bin/sh
+        /usr/bin/chromium --disable-gpu --no-sandbox $@
+
+## Install Robot framework section
+  - name: Install robotframework
+    pip:
+      executable: pip3
+      name: robotframework
+
+  - name: Install pabot for parallel runs
+    pip:
+      executable: pip3
+      name: robotframework-pabot
+
+  - name: Install selenium for browser based test
+    pip:
+      executable: pip3
+      name: robotframework-seleniumlibrary
+
+  - name: Install faker for test purposes (later can be deleted)
+    pip:
+      executable: pip3
+      name: robotframework-faker
+
+  - name: Install database library
+    pip:
+      executable: pip3
+      name: robotframework-databaselibrary
+
+  - name: Install ftp library
+    pip:
+      executable: pip3
+      name: robotframework-ftplibrary
+
+  - name: Install requests
+    pip:
+      executable: pip3
+      name: robotframework-requests
+
+  - name: Install ssh library
+    pip:
+      executable: pip3
+      name: robotframework-sshlibrary
+
+## Install geckodriver
+  - name: Download the gecko driver
+    get_url: url="https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz" dest=/tmp mode=0777
+
+  - name: Install the gecko driver
+    unarchive: src="/tmp/geckodriver-v0.24.0-linux64.tar.gz" dest=/usr/bin/ mode=0700 copy=no
