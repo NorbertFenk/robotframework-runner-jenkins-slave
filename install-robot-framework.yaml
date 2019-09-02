@@ -68,8 +68,13 @@
         #!/bin/sh
         /usr/bin/chromedriver --verbose --log-path=/var/log/chromedriver --no-sandbox $@
 
+  - name: Check chromium stat
+    stat: path=/usr/bin/chromium
+    register: chromium_stat
+
   - name: Rename the chromium shell script to be able to inject our chromium shell script
     command: mv /usr/bin/chromium /usr/bin/chromium.orig
+    when: chromium_stat.stat.exists
 
   - name: Creat chromium magic
     copy:
