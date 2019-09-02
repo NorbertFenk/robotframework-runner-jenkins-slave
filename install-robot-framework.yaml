@@ -68,13 +68,16 @@
         #!/bin/sh
         /usr/bin/chromedriver --verbose --log-path=/var/log/chromedriver --no-sandbox $@
 
+  - name: Rename the chromium shell script to be able to inject our chromium shell script
+    command: mv /usr/bin/chromium /usr/bin/chromium.orig
+
   - name: Creat chromium magic
     copy:
       dest: "/opt/robotframework/bin/chromium"
       mode: '0755'
       content: |
         #!/bin/sh
-        /usr/bin/chromium --disable-gpu --no-sandbox $@
+        /usr/bin/chromium.orig --disable-gpu --no-sandbox $@
 
 ## Install Robot framework section
   - name: Install robotframework
